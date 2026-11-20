@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Note Editor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e6b8a'/%3E%3Crect x='14' y='10' width='36' height='44' rx='4' fill='%23fbfcfc'/%3E%3Cpath d='M20 22l3 3 5-6M20 32l3 3 5-6' stroke='%231e7d4f' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M32 22h12M32 32h12M32 42h12' stroke='%2396aab4' stroke-width='3' stroke-linecap='round'/%3E%3Crect x='19' y='39' width='8' height='8' rx='2' fill='%23c0392b'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#e6ebee;--paper:#fbfcfc;--ink:#15232c;--mute:#6b7c86;--line:#cfd8dd;--acc:#0e6b8a;--accbg:#dcecf2;
+--ok:#1e7d4f;--bad:#c0392b;--warn:#b8620a;--blue:#1f5fa8;--bar:#15232c;--barink:#e8eff2;--cur:#eaf3f7}
+@media (prefers-color-scheme:dark){:root{--bg:#10181d;--paper:#18232a;--ink:#dce6ea;--mute:#8aa0ab;--line:#2c3b44;--acc:#5bbbdc;--accbg:#1d3541;
+--ok:#5fd09a;--bad:#ff7d6e;--warn:#f0a64e;--blue:#7fb2f0;--bar:#0b1115;--cur:#1d2f39}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif}
+header{background:var(--bar);color:var(--barink);display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:8px 14px}
+header .fn{font-weight:600;margin-right:auto;max-width:46ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header .fn i{font-style:normal;color:#ffb86b}
+button{font:inherit;color:inherit;cursor:pointer}
+.hb{background:transparent;border:1px solid #4a5d68;color:var(--barink);border-radius:5px;padding:4px 11px}
+.hb:hover{background:#26394350}
+.hb.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.stats{font-size:13px;color:#b9c9d1}
+.stats b{color:#fff;font-weight:600}
+#tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 14px;background:var(--paper);border-bottom:1px solid var(--line)}
+#tools .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.tb{min-width:32px;height:30px;padding:0 9px;border:1px solid var(--line);background:var(--paper);border-radius:5px}
+.tb:hover{background:var(--accbg);border-color:var(--acc)}
+.sw{width:24px;height:24px;border-radius:50%;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--line);padding:0}
+.sw:hover{box-shadow:0 0 0 2px var(--acc)}
+main{flex:1;overflow:auto;padding:18px 14px 60px}
+#doc{max-width:1000px;margin:0 auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;min-height:60vh}
+.row{display:flex;align-items:flex-start;gap:8px;padding:1px 10px 1px 6px;border-left:4px solid transparent}
+.row.cur{background:var(--cur)}
+.row.s-done{border-left-color:var(--ok)}
+.row.s-bad{border-left-color:var(--bad)}
+.row.s-open{border-left-color:var(--warn)}
+.box{flex:none;width:22px;height:22px;margin-top:1px;border-radius:4px;border:1.5px solid var(--line);background:transparent;font-size:13px;line-height:1;padding:0;color:#fff}
+.s-none .box{border-style:dashed;opacity:.45}
+.row:hover .box{opacity:1}
+.s-open .box{border-color:var(--warn);border-style:solid}
+.s-done .box{background:var(--ok);border-color:var(--ok)}
+.s-bad .box{background:var(--bad);border-color:var(--bad)}
+.txt{flex:1;min-width:0;font:13.5px/1.5 "Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere;padding:1px 0}
+.row.note .txt{font-family:"Segoe UI",system-ui,sans-serif;font-size:13.5px;margin:2px 0 2px 26px;padding:3px 10px;background:#fff7d6;color:#4d3b00;border-left:3px solid #e0b92e;border-radius:0 4px 4px 0}
+@media (prefers-color-scheme:dark){.row.note .txt{background:#3a3217;color:#f3dfa0}}
+b{font-weight:700}
+.c-red{color:var(--bad)}.c-green{color:var(--ok)}.c-blue{color:var(--blue)}.c-orange{color:var(--warn)}
+mark{color:inherit;padding:0 1px;border-radius:2px}
+.h-yellow{background:#ffe98a}.h-green{background:#bfeccb}.h-pink{background:#ffc9d6}
+@media (prefers-color-scheme:dark){mark{color:#10181d}}
+.r-pass{color:var(--ok);font-weight:700}
+.r-fail{color:var(--bad);font-weight:700}
+.r-hold{background:var(--bad);color:#fff;padding:0 5px;border-radius:3px;font-weight:700}
+.r-warn{color:var(--bad);font-weight:700}
+.r-was{color:var(--mute)}
+.r-step{color:var(--acc);font-weight:700}
+.r-val{color:var(--blue);font-weight:700}
+#ed{display:block;width:100%;min-height:70vh;border:0;outline:0;resize:vertical;background:transparent;color:var(--ink);padding:12px 16px;font:13.5px/1.5 "Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;white-space:pre;overflow:auto}
+.fig{margin:4px 0 6px;font-family:"Segoe UI",system-ui,sans-serif}
+.fig img{display:block;max-width:100%;border:1px solid var(--line);border-radius:4px;background:#fff;cursor:zoom-in}
+.fig figcaption{font-size:12px;color:var(--mute);margin-top:3px;cursor:text}
+.welcome{padding:48px 28px;text-align:center;color:var(--mute)}
+.welcome h2{color:var(--ink);margin:0 0 8px;font-size:20px}
+.welcome button{margin:14px 5px 0;padding:8px 18px;border-radius:6px;border:1px solid var(--acc);background:var(--acc);color:#fff}
+.welcome button.alt{background:transparent;color:var(--acc)}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--bar);color:var(--barink);padding:8px 16px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+body.drag #doc{outline:3px dashed var(--acc)}
+#pbar{display:none}
+@media print{
+  :root{--bg:#fff;--paper:#fff;--ink:#000;--mute:#555;--line:#bbb;--acc:#0e6b8a;--accbg:#dcecf2;--ok:#1e7d4f;--bad:#c0392b;--warn:#b8620a;--blue:#1f5fa8;--cur:#fff}
+  @page{margin:14mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{height:auto;background:#fff}
+  body{display:block}
+  header,#tools,#toast{display:none!important}
+  main{overflow:visible;padding:0}
+  #doc{border:0;border-radius:0;max-width:none;min-height:0}
+  #pbar{display:block;font:11px "Segoe UI",system-ui,sans-serif;color:#555;border-bottom:1px solid #bbb;padding-bottom:4px;margin-bottom:8px}
+  .row{break-inside:avoid}
+  .row.cur{background:none}
+  .s-none .box{visibility:hidden}
+  .row.note .txt{background:#fff7d6!important;color:#4d3b00!important}
+  mark{color:inherit!important}
+  .fig img{cursor:default}
+}
+</style>
+</head>
+<body>
+<header>
+  <span class="fn" id="fn">No file open</span>
+  <span class="stats" id="stats"></span>
+  <button class="hb" id="bOpen" title="Ctrl+O">Open</button>
+  <button class="hb" id="bSave" title="Ctrl+S">Save</button>
+  <button class="hb" id="bSaveAs">Save as</button>
+  <button class="hb" id="bPdf" title="Ctrl+P - choose Save as PDF in the print window">Export PDF</button>
+  <button class="hb on" id="vMark">Mark view</button>
+  <button class="hb" id="vEdit">Edit view</button>
+</header>
+<div id="tools">
+  <button class="tb" data-f="b" title="Bold"><b>B</b></button>
+  <button class="tb" data-f="u" title="Underline"><u>U</u></button>
+  <button class="tb" data-f="s" title="Strike through"><s>S</s></button>
+  <span class="sep"></span>
+  <button class="sw" data-f="red" style="background:#c0392b" title="Red text"></button>
+  <button class="sw" data-f="green" style="background:#1e7d4f" title="Green text"></button>
+  <button class="sw" data-f="blue" style="background:#1f5fa8" title="Blue text"></button>
+  <button class="sw" data-f="orange" style="background:#b8620a" title="Orange text"></button>
+  <span class="sep"></span>
+  <button class="sw" data-f="hy" style="background:#ffe98a" title="Highlight yellow"></button>
+  <button class="sw" data-f="hg" style="background:#bfeccb" title="Highlight green"></button>
+  <button class="sw" data-f="hp" style="background:#ffc9d6" title="Highlight pink"></button>
+  <button class="tb" data-f="clear" title="Remove formatting from selection or line">Clear</button>
+  <span class="sep"></span>
+  <button class="tb" id="bNote">Add note</button>
+  <button class="tb" id="bPic" title="Insert picture (you can also paste a screenshot with Ctrl+V, or drop an image file)">Picture</button>
+  <button class="tb" id="bNew">New line</button>
+  <button class="tb" id="bDel">Delete line</button>
+  <span class="sep"></span>
+  <button class="tb" id="bUndo" title="Ctrl+Z">Undo</button>
+  <button class="tb" id="bRedo" title="Ctrl+Y">Redo</button>
+</div>
+<main><div id="pbar"></div><div id="doc"></div></main>
+<div id="toast"></div>
+<input type="file" id="fi" accept=".txt,.md,text/plain,text/markdown" hidden>
+<input type="file" id="fimg" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" multiple hidden>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const PRE=/^- \[([ x!])\] /;
+const NEXT={none:' ',' ':'x','x':'!','!':null};
+const FMT={b:['**','**'],s:['~~','~~'],u:['<u>','</u>'],
+  red:['{red}','{/}'],green:['{green}','{/}'],blue:['{blue}','{/}'],orange:['{orange}','{/}'],
+  hy:['{=yellow}','{/=}'],hg:['{=green}','{/=}'],hp:['{=pink}','{/=}']};
+
+/* Auto-highlight rules: [regex source (no capture groups), css class]. Edit freely. */
+const RULES=[
+  ['^\\s*T\\d+\\b','r-step'],
+  ['HOLD POINT','r-hold'],
+  ['\\bPASS(?:ED)?\\b','r-pass'],
+  ['\\bFAIL(?:ED)?\\b','r-fail'],
+  ['\\b[Dd]o NOT\\b|\\bDO NOT\\b|\\bNO-IMPACT RULES\\b','r-warn'],
+  ['\\(was[^)]*\\)','r-was'],
+  ['\\b\\d*\\.\\d+\\s?[sS]\\b','r-val']
+];
+const RULE_RE=new RegExp(RULES.map(r=>'('+r[0]+')').join('|'),'g');
+
+let imgs={};
+const IMG=/^\s*!\[([^\]]*)\]\[(img\d+)\]\s*$/;
+const DEF=/^\[(img\d+)\]: (data:image\/(?:png|jpeg);base64,[A-Za-z0-9+\/=]+)\s*$/;
+let lines=[''],eol='\n',name='',handle=null,view='mark',cur=-1,dirty=false,loaded=false,hist=[],redo=[];
+
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function inline(raw){
+  let h=esc(raw).replace(RULE_RE,(m,...g)=>{const k=g.findIndex(x=>x!==undefined);return `<span class="${RULES[k][1]}">${m}</span>`});
+  return h.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+    .replace(/~~(.+?)~~/g,'<s>$1</s>')
+    .replace(/&lt;u&gt;(.+?)&lt;\/u&gt;/g,'<u>$1</u>')
+    .replace(/\{(red|green|blue|orange)\}(.+?)\{\/\}/g,'<span class="c-$1">$2</span>')
+    .replace(/\{=(yellow|green|pink)\}(.+?)\{\/=\}/g,'<mark class="h-$1">$2</mark>');
+}
+function split(l){const m=l.match(PRE);return{st:m?m[1]:null,pre:m?m[0]:'',body:l.slice(m?m[0].length:0)}}
+
+function capParts(alt){const p=alt.match(/^(.*?)(?:\|(\d+))?$/);return{cap:p[1].trim(),w:+(p[2]||60)}}
+function fig(body){
+  const m=body.match(IMG);if(!m)return '';
+  const src=imgs[m[2]];if(!src)return `<span class="r-fail">[missing image ${m[2]}]</span>`;
+  const {cap,w}=capParts(m[1]);
+  return `<figure class="fig" style="margin:4px 0 6px"><img src="${src}" style="max-width:${w}%" title="Click to resize"><figcaption title="Double-click to edit caption">${esc(cap)||'&nbsp;'}</figcaption></figure>`;
+}
+function render(){
+  const doc=$('doc');
+  if(!loaded){
+    doc.innerHTML='<div class="welcome"><h2>Open a job file</h2><div>Choose a .txt or .md file, or drop one here.</div><button id="wOpen">Open file</button><button class="alt" id="wBlank">Start blank</button></div>';
+    $('wOpen').onclick=openFile;$('wBlank').onclick=()=>{load('','job-notes.txt',null);setView('edit')};
+    stats();return;
+  }
+  if(view==='edit'){
+    doc.innerHTML='<textarea id="ed" spellcheck="false"></textarea>';
+    const ta=$('ed');ta.value=lines.join('\n');
+    ta.oninput=()=>{lines=ta.value.split('\n');setDirty(true);stats()};
+    stats();return;
+  }
+  doc.innerHTML=lines.map((l,i)=>{
+    const {st,body}=split(l);
+    const note=/^\s*>/.test(body);
+    const cls=st==='x'?'s-done':st==='!'?'s-bad':st===' '?'s-open':'s-none';
+    const shown=note?body.replace(/^\s*>\s?/,''):body;
+    const tip=st==='x'?'Done':st==='!'?'Problem':st===' '?'To do':'Click to mark';
+    return `<div class="row ${cls}${note?' note':''}${i===cur?' cur':''}" data-i="${i}"><button class="box" title="${tip}">${st==='x'?'&#10004;':st==='!'?'&#10006;':''}</button><div class="txt">${fig(body)||inline(shown)||'&nbsp;'}</div></div>`;
+  }).join('');
+  stats();
+}
+function stats(){
+  let d=0,b=0,o=0;
+  for(const l of lines){const m=l.match(PRE);if(!m)continue;if(m[1]==='x')d++;else if(m[1]==='!')b++;else o++}
+  const t=d+b+o;
+  $('stats').innerHTML=t?`<b>${d}</b> done &nbsp; <b>${b}</b> problem &nbsp; <b>${o}</b> to do &nbsp; of ${t} marked`:'';
+  $('fn').innerHTML=(name||'No file open')+(dirty?' <i>(unsaved)</i>':'');
+  document.title=(dirty?'* ':'')+(name||'Job Note Editor');
+}
+function setDirty(v){dirty=v;stats()}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2200)}
+
+/* history */
+function push(){hist.push(lines.join('\n'));if(hist.length>300)hist.shift();redo=[]}
+function undo(){if(view==='edit'){document.execCommand('undo');return}if(!hist.length)return;redo.push(lines.join('\n'));lines=hist.pop().split('\n');setDirty(true);render()}
+function redoIt(){if(view==='edit'){document.execCommand('redo');return}if(!redo.length)return;hist.push(lines.join('\n'));lines=redo.pop().split('\n');setDirty(true);render()}
+
+/* view */
+function setView(v){view=v;$('vMark').classList.toggle('on',v==='mark');$('vEdit').classList.toggle('on',v==='edit');render()}
+
+/* line interactions */
+$('doc').addEventListener('click',e=>{
+  const row=e.target.closest('.row');if(!row)return;
+  const i=+row.dataset.i;
+  if(e.target.closest('.box')){
+    push();const {st,body}=split(lines[i]);
+    const nx=NEXT[st===null?'none':st];
+    lines[i]=(nx?`- [${nx}] `:'')+body;cur=i;setDirty(true);render();return;
+  }
+  if(cur!==i){const p=document.querySelector('.row.cur');if(p)p.classList.remove('cur');row.classList.add('cur');cur=i}
+});
+
+/* pictures */
+$('doc').addEventListener('click',e=>{
+  const im=e.target.closest('.fig img');if(!im)return;
+  const i=+e.target.closest('.row').dataset.i,s=split(lines[i]),g=s.body.match(IMG);if(!g)return;
+  const {cap,w}=capParts(g[1]);
+  push();lines[i]=s.pre+`![${cap}|${w<45?60:w<80?100:30}][${g[2]}]`;cur=i;setDirty(true);render();
+});
+$('doc').addEventListener('dblclick',e=>{
+  if(!e.target.closest('figcaption'))return;
+  const i=+e.target.closest('.row').dataset.i,s=split(lines[i]),g=s.body.match(IMG);if(!g)return;
+  const {cap,w}=capParts(g[1]);
+  const t=prompt('Caption:',cap);if(t===null)return;
+  push();lines[i]=s.pre+`![${t.replace(/[\[\]|]/g,' ').trim()}|${w}][${g[2]}]`;cur=i;setDirty(true);render();
+});
+function shrink(f){
+  return new Promise((res,rej)=>{
+    const u=URL.createObjectURL(f),im=new Image();
+    im.onload=()=>{
+      const k=Math.min(1,1600/Math.max(im.naturalWidth,im.naturalHeight));
+      const c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);
+      const x=c.getContext('2d'),png=f.type!=='image/jpeg';
+      if(!png){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}
+      x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);
+      res(png?c.toDataURL('image/png'):c.toDataURL('image/jpeg',.88));
+    };
+    im.onerror=()=>rej(new Error('Not a readable image'));
+    im.src=u;
+  });
+}
+function insertAfterCur(l){
+  push();let at;
+  if(view==='edit'&&$('ed')){const ta=$('ed');lines=ta.value.split('\n');at=ta.value.slice(0,ta.selectionStart).split('\n').length-1}
+  else if(cur>=0)at=cur;
+  else at=lines.length-1-(lines.length>1&&lines[lines.length-1]===''?1:0);
+  lines.splice(at+1,0,l);cur=at+1;setDirty(true);render();
+}
+async function addImage(f){
+  try{
+    const url=await shrink(f);let n=1;while(imgs['img'+n])n++;
+    const id='img'+n;imgs[id]=url;
+    const cap=(f.name||'screenshot').replace(/\.[^.]+$/,'').replace(/[\[\]|]/g,' ').trim()||'image';
+    insertAfterCur(`![${cap}|60][${id}]`);
+  }catch(err){toast('Picture failed: '+err.message)}
+}
+async function addImages(files){
+  if(!loaded)return toast('Open a job file first');
+  for(const f of files)await addImage(f);
+}
+$('bPic').onmousedown=e=>e.preventDefault();
+$('bPic').onclick=()=>{if(!loaded)return toast('Open a job file first');$('fimg').click()};
+$('fimg').onchange=async e=>{const fs=[...e.target.files];e.target.value='';await addImages(fs)};
+addEventListener('paste',e=>{
+  const fs=[...(e.clipboardData?e.clipboardData.items:[])].filter(i=>i.type.startsWith('image/')).map(i=>i.getAsFile()).filter(Boolean);
+  if(!fs.length)return;e.preventDefault();addImages(fs);
+});
+
+/* formatting */
+function wrap(f){
+  const [o,c]=FMT[f];
+  if(view==='edit'){
+    const ta=$('ed');if(!ta)return;let a=ta.selectionStart,b=ta.selectionEnd;
+    if(a===b){
+      const ls=ta.value.lastIndexOf('\n',a-1)+1;let le=ta.value.indexOf('\n',a);if(le<0)le=ta.value.length;
+      a=ls+ta.value.slice(ls,le).match(/^(- \[[ x!]\] )?\s*/)[0].length;b=le;
+    }
+    ta.focus();ta.setRangeText(o+ta.value.slice(a,b)+c,a,b,'select');
+    lines=ta.value.split('\n');setDirty(true);return;
+  }
+  if(cur<0)return toast('Click a line first');
+  push();
+  const {pre,body}=split(lines[cur]);
+  const s=getSelection().toString();
+  let a,b,idx=s&&!s.includes('\n')?body.indexOf(s):-1;
+  if(idx<0){a=body.match(/^\s*(?:>\s?)?/)[0].length;b=body.length}else{a=idx;b=idx+s.length}
+  const seg=body.slice(a,b);
+  const out=(seg.length>=o.length+c.length&&seg.startsWith(o)&&seg.endsWith(c))?seg.slice(o.length,seg.length-c.length):o+seg+c;
+  lines[cur]=pre+body.slice(0,a)+out+body.slice(b);
+  setDirty(true);render();
+}
+function clearFmt(){
+  const strip=t=>t.replace(/\*\*|~~|<\/?u>|\{(?:red|green|blue|orange|=yellow|=green|=pink|\/|\/=)\}/g,'');
+  if(view==='edit'){
+    const ta=$('ed');let a=ta.selectionStart,b=ta.selectionEnd;
+    if(a===b){a=ta.value.lastIndexOf('\n',a-1)+1;b=ta.value.indexOf('\n',a);if(b<0)b=ta.value.length}
+    ta.focus();ta.setRangeText(strip(ta.value.slice(a,b)),a,b,'select');lines=ta.value.split('\n');setDirty(true);return;
+  }
+  if(cur<0)return toast('Click a line first');
+  push();const {pre,body}=split(lines[cur]);
+  const s=getSelection().toString(),idx=s&&!s.includes('\n')?body.indexOf(s):-1;
+  lines[cur]=idx<0?pre+strip(body):pre+body.slice(0,idx)+strip(s)+body.slice(idx+s.length);
+  setDirty(true);render();
+}
+document.querySelectorAll('#tools [data-f]').forEach(b=>{
+  b.onmousedown=e=>e.preventDefault();
+  b.onclick=()=>b.dataset.f==='clear'?clearFmt():wrap(b.dataset.f);
+});
+for(const id of ['bNote','bNew','bDel','bUndo','bRedo'])$(id).onmousedown=e=>e.preventDefault();
+$('bNote').onclick=()=>{
+  if(view!=='mark'||cur<0)return toast('Mark view: click a line first');
+  const t=prompt('Note for this line:');if(!t)return;
+  push();lines.splice(cur+1,0,'> '+t);setDirty(true);render();
+};
+$('bNew').onclick=()=>{
+  if(view!=='mark'||cur<0)return toast('Mark view: click a line first');
+  push();lines.splice(cur+1,0,'');cur++;setDirty(true);render();
+};
+$('bDel').onclick=()=>{
+  if(view!=='mark'||cur<0)return toast('Mark view: click a line first');
+  push();lines.splice(cur,1);if(!lines.length)lines=[''];cur=Math.min(cur,lines.length-1);setDirty(true);render();
+};
+$('bUndo').onclick=undo;$('bRedo').onclick=redoIt;
+$('vMark').onclick=()=>setView('mark');$('vEdit').onclick=()=>setView('edit');
+
+/* files */
+const TYPES=[{description:'Text or Markdown',accept:{'text/plain':['.txt','.md']}}];
+function load(text,fname,h){
+  eol=text.includes('\r\n')?'\r\n':'\n';
+  imgs={};
+  lines=text.replace(/\r\n/g,'\n').split('\n').filter(l=>{const m=l.match(DEF);if(m){imgs[m[1]]=m[2];return false}return true});
+  if(Object.keys(imgs).length){while(lines.length&&lines[lines.length-1]==='')lines.pop();lines.push('')}
+  name=fname;handle=h;hist=[];redo=[];cur=-1;loaded=true;dirty=false;render();
+}
+async function openFile(){
+  if(dirty&&!confirm('Discard unsaved changes?'))return;
+  if(window.showOpenFilePicker){
+    try{
+      const [h]=await showOpenFilePicker({id:'jobfolder',types:TYPES});
+      const f=await h.getFile();load(await f.text(),f.name,h);
+    }catch(e){if(e.name!=='AbortError')toast('Open failed: '+e.message)}
+  }else $('fi').click();
+}
+$('fi').onchange=async e=>{const f=e.target.files[0];if(f){load(await f.text(),f.name,null);toast('Opened. This browser will download on save.')}e.target.value=''};
+async function save(as){
+  if(!loaded)return;
+  let out=lines.join(eol);
+  const used=Object.keys(imgs).filter(k=>lines.some(l=>l.includes(']['+k+']')));
+  if(used.length)out=out.replace(/\s+$/,'')+eol+eol+used.map(k=>`[${k}]: ${imgs[k]}`).join(eol)+eol;
+  const mb=used.length?' ('+(out.length/1048576).toFixed(1)+' MB)':'';
+  if(window.showSaveFilePicker){
+    try{
+      if(!handle||as)handle=await showSaveFilePicker({id:'jobfolder',suggestedName:name||'job-notes.txt',types:TYPES});
+      const w=await handle.createWritable();await w.write(out);await w.close();
+      name=handle.name;dirty=false;stats();toast('Saved '+name+mb);
+    }catch(e){if(e.name!=='AbortError')toast('Save failed: '+e.message)}
+  }else{
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
+    a.download=name||'job-notes.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);dirty=false;stats();
+  }
+}
+$('bOpen').onclick=openFile;$('bSave').onclick=()=>save(false);$('bSaveAs').onclick=()=>save(true);
+
+/* export PDF (browser print dialog -> Save as PDF) */
+function exportPdf(){
+  if(!loaded)return toast('Open a job file first');
+  if(view!=='mark')setView('mark');
+  cur=-1;render();
+  $('pbar').textContent=(name||'Job notes')+'   |   '+new Date().toLocaleString();
+  document.title=(name||'job-notes').replace(/\.[^.]+$/,'');
+  setTimeout(()=>window.print(),80);
+}
+addEventListener('afterprint',()=>stats());
+$('bPdf').onclick=exportPdf;
+
+/* drag and drop */
+addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('drag')});
+addEventListener('dragleave',e=>{if(!e.relatedTarget)document.body.classList.remove('drag')});
+addEventListener('drop',async e=>{
+  e.preventDefault();document.body.classList.remove('drag');
+  const dropped=[...e.dataTransfer.files];
+  if(dropped.length&&dropped.every(f=>f.type.startsWith('image/'))){addImages(dropped);return}
+  const it=e.dataTransfer.items&&e.dataTransfer.items[0];if(!it)return;
+  if(dirty&&!confirm('Discard unsaved changes?'))return;
+  try{
+    let h=null;if(it.getAsFileSystemHandle){h=await it.getAsFileSystemHandle();if(h&&h.kind!=='file')h=null}
+    const f=h?await h.getFile():it.getAsFile();load(await f.text(),f.name,h);
+  }catch(err){toast('Could not open: '+err.message)}
+});
+
+/* shortcuts, unsaved warning */
+addEventListener('keydown',e=>{
+  if(!(e.ctrlKey||e.metaKey))return;
+  const k=e.key.toLowerCase();
+  if(k==='s'){e.preventDefault();save(e.shiftKey)}
+  else if(k==='o'){e.preventDefault();openFile()}
+  else if(k==='p'){e.preventDefault();exportPdf()}
+  else if(view==='mark'&&k==='z'){e.preventDefault();undo()}
+  else if(view==='mark'&&k==='y'){e.preventDefault();redoIt()}
+});
+addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+render();
+</script>
+</body>
+</html>
