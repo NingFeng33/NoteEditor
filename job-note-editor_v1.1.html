@@ -29,9 +29,32 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sw{width:24px;height:24px;border-radius:50%;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--line);padding:0}
 .sw:hover{box-shadow:0 0 0 2px var(--acc)}
 main{flex:1;overflow:auto;padding:18px 14px 60px}
-#doc{max-width:1000px;margin:0 auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;min-height:60vh}
+#doc{max-width:var(--w,1000px);margin:0 auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;min-height:60vh}
 .row{display:flex;align-items:flex-start;gap:8px;padding:1px 10px 1px 6px;border-left:4px solid transparent}
 .row.cur{background:var(--cur)}
+body.nowrap #doc{width:max-content;min-width:100%;max-width:none}
+body.nowrap .txt{white-space:pre}
+.tblwrap{overflow-x:auto;margin:4px 10px 6px 40px;padding-bottom:2px}
+.tblwrap table{border-collapse:collapse;font:13.5px/1.5 "Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;white-space:nowrap}
+.tblwrap th,.tblwrap td{border:1px solid var(--line);padding:2px 10px;vertical-align:top}
+.tblwrap th{background:var(--accbg);font-weight:700}
+.boxw{margin:2px 0 4px}
+.boxw .row{width:max-content;min-width:100%}
+.row.tight{padding-top:0;padding-bottom:0}
+.row.tight .txt{padding:0;white-space:pre}
+.row.tight .box{width:20px;height:20px;margin-top:0;font-size:12px}
+.tblwrap td.chk,.tblwrap th.chk{border:0;background:none!important;padding:2px 6px 2px 8px;vertical-align:middle}
+.trow:hover .box{opacity:1}
+.trow.s-done td.chk{box-shadow:inset 4px 0 var(--ok)}
+.trow.s-bad td.chk{box-shadow:inset 4px 0 var(--bad)}
+.trow.s-open td.chk{box-shadow:inset 4px 0 var(--warn)}
+.ib{display:inline-block;width:3ch;text-align:center;white-space:pre;cursor:pointer;border-radius:3px;color:var(--mute)}
+.ib:hover{background:var(--accbg)}
+.ib-x{color:var(--ok);font-weight:700}
+.ib-b{color:var(--bad);font-weight:700}
+.trow{cursor:default}
+.trow.cur td{background:var(--cur)}
+.trow.cur th{background:var(--accbg);box-shadow:inset 0 -2px 0 var(--acc)}
 .row.s-done{border-left-color:var(--ok)}
 .row.s-bad{border-left-color:var(--bad)}
 .row.s-open{border-left-color:var(--warn)}
@@ -68,6 +91,16 @@ mark{color:inherit;padding:0 1px;border-radius:2px}
 #toast.show{opacity:1}
 button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 body.drag #doc{outline:3px dashed var(--acc)}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);padding:18px 20px;width:min(520px,92vw);box-shadow:0 10px 40px #0006}
+dialog::backdrop{background:#0008}
+dialog h3{margin:0 0 12px;font-size:17px}
+dialog label{display:block;font-size:12px;color:var(--mute);margin:0 0 9px}
+dialog input,dialog select{display:block;width:100%;margin-top:3px;padding:6px 8px;font:14px "Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:5px}
+dialog .two{display:flex;gap:10px}dialog .two label{flex:1}
+dialog .bt{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+dialog .bt button{padding:6px 16px;border-radius:5px;border:1px solid var(--line);background:transparent}
+dialog .bt .pri{background:var(--acc);border-color:var(--acc);color:#fff}
+dialog .hint{font-size:12px;color:var(--mute);margin:2px 0 0}
 #pbar{display:none}
 @media print{
   :root{--bg:#fff;--paper:#fff;--ink:#000;--mute:#555;--line:#bbb;--acc:#0e6b8a;--accbg:#dcecf2;--ok:#1e7d4f;--bad:#c0392b;--warn:#b8620a;--blue:#1f5fa8;--cur:#fff}
@@ -81,6 +114,16 @@ body.drag #doc{outline:3px dashed var(--acc)}
   #pbar{display:block;font:11px "Segoe UI",system-ui,sans-serif;color:#555;border-bottom:1px solid #bbb;padding-bottom:4px;margin-bottom:8px}
   .row{break-inside:avoid}
   .row.cur{background:none}
+  .trow.cur td{background:none}
+  body.nowrap #doc{width:auto!important;min-width:0!important}
+  body.nowrap .txt{white-space:pre-wrap!important}
+  .tblwrap{overflow:visible;margin-left:0}
+  .tblwrap table{white-space:normal;width:100%}
+  .trow{break-inside:avoid}
+  .boxw .row{width:auto;min-width:0}
+  .row.tight .txt{white-space:pre-wrap}
+  .trow.s-none .box{visibility:hidden}
+  .ib:hover{background:none}
   .s-none .box{visibility:hidden}
   .row.note .txt{background:#fff7d6!important;color:#4d3b00!important}
   mark{color:inherit!important}
@@ -92,10 +135,13 @@ body.drag #doc{outline:3px dashed var(--acc)}
 <header>
   <span class="fn" id="fn">No file open</span>
   <span class="stats" id="stats"></span>
+  <button class="hb" id="bNewNote" title="Ctrl+N (Ctrl+Shift+N = new window)">New</button>
   <button class="hb" id="bOpen" title="Ctrl+O">Open</button>
   <button class="hb" id="bSave" title="Ctrl+S">Save</button>
   <button class="hb" id="bSaveAs">Save as</button>
   <button class="hb" id="bPdf" title="Ctrl+P - choose Save as PDF in the print window">Export PDF</button>
+  <button class="hb" id="bWrap" title="Wrap long lines on screen, or keep them on one line and scroll sideways (tables never wrap)">Wrap: on</button>
+  <button class="hb" id="bWidth" title="Page width on screen (PDF export is not affected)">Width: Normal</button>
   <button class="hb on" id="vMark">Mark view</button>
   <button class="hb" id="vEdit">Edit view</button>
 </header>
@@ -115,6 +161,7 @@ body.drag #doc{outline:3px dashed var(--acc)}
   <button class="tb" data-f="clear" title="Remove formatting from selection or line">Clear</button>
   <span class="sep"></span>
   <button class="tb" id="bNote">Add note</button>
+  <button class="tb" id="bBox" title="Insert a check box [ ] where you last clicked (Mark view) or at the cursor (Edit view). Click a box to change it: empty, done, problem.">Add box</button>
   <button class="tb" id="bPic" title="Insert picture (you can also paste a screenshot with Ctrl+V, or drop an image file)">Picture</button>
   <button class="tb" id="bNew">New line</button>
   <button class="tb" id="bDel">Delete line</button>
@@ -124,6 +171,23 @@ body.drag #doc{outline:3px dashed var(--acc)}
 </div>
 <main><div id="pbar"></div><div id="doc"></div></main>
 <div id="toast"></div>
+<dialog id="dNew"><form id="fNew">
+  <h3>New note</h3>
+  <label>Type<select id="nType"></select></label>
+  <div id="nFields">
+    <label>Equipment / tag<input id="nTag" placeholder="28-RPX-1801A (SEL-751) / 28-RPX-1801B (SEL-787) - 28-TR-1601"></label>
+    <label>Subject<input id="nSub" placeholder="HV GROUND ELEMENTS"></label>
+    <div class="two"><label>Revision<input id="nRev" value="1"></label><label>Date<input id="nDate" type="date"></label></div>
+    <label>Basis (files / documents, optional)<input id="nBasis" placeholder="28-RPX-1801A_ASLEFT_20261120.rdb"></label>
+    <label>Scope (optional)<input id="nScope" placeholder="Group 1 / Logic 1 only"></label>
+  </div>
+  <p class="hint" id="nFile"></p>
+  <div class="bt"><button type="button" id="nCancel">Cancel</button><button type="submit" class="pri">Create</button></div>
+</form></dialog>
+<dialog id="dGuard"><form method="dialog">
+  <h3 id="gMsg"></h3>
+  <div class="bt"><button value="cancel">Cancel</button><button value="no">Don't save</button><button value="yes" class="pri" autofocus>Save</button></div>
+</form></dialog>
 <input type="file" id="fi" accept=".txt,.md,text/plain,text/markdown" hidden>
 <input type="file" id="fimg" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" multiple hidden>
 
@@ -154,13 +218,17 @@ const DEF=/^\[(img\d+)\]: (data:image\/(?:png|jpeg);base64,[A-Za-z0-9+\/=]+)\s*$
 let lines=[''],eol='\n',name='',handle=null,view='mark',cur=-1,dirty=false,loaded=false,hist=[],redo=[];
 
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function inline(raw){
+/* inline check box: [ ] [x] [!] anywhere in a line (same width in every state, so ASCII tables stay aligned). ctr numbers them per line. */
+const IBX=/\[( |x|!)\]/g;
+function inline(raw,ctr){
+  ctr=ctr||{k:0};
   let h=esc(raw).replace(RULE_RE,(m,...g)=>{const k=g.findIndex(x=>x!==undefined);return `<span class="${RULES[k][1]}">${m}</span>`});
   return h.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
     .replace(/~~(.+?)~~/g,'<s>$1</s>')
     .replace(/&lt;u&gt;(.+?)&lt;\/u&gt;/g,'<u>$1</u>')
     .replace(/\{(red|green|blue|orange)\}(.+?)\{\/\}/g,'<span class="c-$1">$2</span>')
-    .replace(/\{=(yellow|green|pink)\}(.+?)\{\/=\}/g,'<mark class="h-$1">$2</mark>');
+    .replace(/\{=(yellow|green|pink)\}(.+?)\{\/=\}/g,'<mark class="h-$1">$2</mark>')
+    .replace(IBX,(m,c)=>`<span class="ib ${c==='x'?'ib-x':c==='!'?'ib-b':'ib-o'}" data-k="${ctr.k++}" title="Click to change">[${c==='x'?'&#10004;':c==='!'?'&#10006;':'&nbsp;'}]</span>`);
 }
 function split(l){const m=l.match(PRE);return{st:m?m[1]:null,pre:m?m[0]:'',body:l.slice(m?m[0].length:0)}}
 
@@ -174,8 +242,8 @@ function fig(body){
 function render(){
   const doc=$('doc');
   if(!loaded){
-    doc.innerHTML='<div class="welcome"><h2>Open a job file</h2><div>Choose a .txt or .md file, or drop one here.</div><button id="wOpen">Open file</button><button class="alt" id="wBlank">Start blank</button></div>';
-    $('wOpen').onclick=openFile;$('wBlank').onclick=()=>{load('','job-notes.txt',null);setView('edit')};
+    doc.innerHTML='<div class="welcome"><h2>Open a job file</h2><div>Choose a .txt or .md file, or drop one here.</div><button id="wNew">New note</button><button class="alt" id="wOpen">Open file</button></div>';
+    $('wOpen').onclick=openFile;$('wNew').onclick=newNote;
     stats();return;
   }
   if(view==='edit'){
@@ -184,19 +252,63 @@ function render(){
     ta.oninput=()=>{lines=ta.value.split('\n');setDirty(true);stats()};
     stats();return;
   }
-  doc.innerHTML=lines.map((l,i)=>{
-    const {st,body}=split(l);
-    const note=/^\s*>/.test(body);
-    const cls=st==='x'?'s-done':st==='!'?'s-bad':st===' '?'s-open':'s-none';
-    const shown=note?body.replace(/^\s*>\s?/,''):body;
-    const tip=st==='x'?'Done':st==='!'?'Problem':st===' '?'To do':'Click to mark';
-    return `<div class="row ${cls}${note?' note':''}${i===cur?' cur':''}" data-i="${i}"><button class="box" title="${tip}">${st==='x'?'&#10004;':st==='!'?'&#10006;':''}</button><div class="txt">${fig(body)||inline(shown)||'&nbsp;'}</div></div>`;
-  }).join('');
+  let out='';
+  for(let i=0;i<lines.length;i++){
+    if(isBox(lines[i])){
+      let j=i;while(j+1<lines.length&&isBox(lines[j+1]))j++;
+      if(j>i){
+        const md=isSep(lines[i+1])&&lines.slice(i,j+1).every(isT);
+        out+=md?tbl(i,j):boxb(i,j);i=j;continue;
+      }
+    }
+    out+=rowHTML(lines[i],i);
+  }
+  doc.innerHTML=out;
   stats();
+}
+const stInfo=st=>({cls:st==='x'?'s-done':st==='!'?'s-bad':st===' '?'s-open':'s-none',
+  tip:st==='x'?'Done':st==='!'?'Problem':st===' '?'To do':'Click to mark',g:st==='x'?'&#10004;':st==='!'?'&#10006;':''});
+const BORDER=/^\s*\+[-=+]*\+\s*$/;
+/* tight = a line of an ASCII box table: no gaps between lines, and no left box on pure +----+ border lines */
+function rowHTML(l,i,tight){
+  const {st,body}=split(l);
+  const note=/^\s*>/.test(body);
+  const {cls,tip,g}=stInfo(st);
+  const shown=note?body.replace(/^\s*>\s?/,''):body;
+  const btn=tight&&st===null&&BORDER.test(body)?'<span class="box" style="visibility:hidden"></span>':`<button class="box" title="${tip}">${g}</button>`;
+  return `<div class="row ${cls}${note?' note':''}${i===cur?' cur':''}${tight?' tight':''}" data-i="${i}">${btn}<div class="txt">${fig(body)||inline(shown)||'&nbsp;'}</div></div>`;
+}
+
+/* tables. A run of 2+ lines that start and end with | (or are +----+ borders) is one block. A line may carry the usual "- [ ] " prefix.
+   - with a |---|---| separator as its 2nd line -> real markdown table
+   - otherwise (ASCII box table) -> shown exactly as typed: monospace, never wrapped, no gaps between lines
+   Every table line keeps its own left check box (click to cycle), and [ ] boxes inside the text work too. */
+const bd=l=>l.replace(PRE,'');
+const isT=l=>/^\s*\|.*\|\s*$/.test(bd(l));
+const isBox=l=>isT(l)||BORDER.test(bd(l));
+const cells=l=>bd(l).trim().replace(/^\||\|$/g,'').split(/(?<!\\)\|/).map(c=>c.trim().replace(/\\\|/g,'|'));
+const isSep=l=>l!==undefined&&!PRE.test(l)&&isT(l)&&cells(l).every(c=>/^:?-+:?$/.test(c));
+function boxb(a,b){
+  let h='<div class="tblwrap boxw">';
+  for(let i=a;i<=b;i++)h+=rowHTML(lines[i],i,true);
+  return h+'</div>';
+}
+function tbl(a,b){
+  const sep=isSep(lines[a+1])?a+1:-1;
+  const al=sep<0?[]:cells(lines[sep]).map(c=>/^:-+:$/.test(c)?'center':/-:$/.test(c)?'right':'left');
+  let h='<div class="tblwrap"><table>';
+  for(let i=a;i<=b;i++){
+    if(i===sep)continue;
+    const t=sep>=0&&i===a?'th':'td',{cls,tip,g}=stInfo(split(lines[i]).st),ctr={k:0};
+    h+=`<tr class="trow ${cls}${i===cur?' cur':''}" data-i="${i}"><${t} class="chk"><button class="box" title="${tip}">${g}</button></${t}>`
+      +cells(lines[i]).map((c,k)=>`<${t} style="text-align:${al[k]||'left'}">${inline(c,ctr)||'&nbsp;'}</${t}>`).join('')+'</tr>';
+  }
+  return h+'</table></div>';
 }
 function stats(){
   let d=0,b=0,o=0;
-  for(const l of lines){const m=l.match(PRE);if(!m)continue;if(m[1]==='x')d++;else if(m[1]==='!')b++;else o++}
+  const tally=c=>{if(c==='x')d++;else if(c==='!')b++;else o++};
+  for(const l of lines){const m=l.match(PRE);if(m)tally(m[1]);for(const t of l.slice(m?m[0].length:0).matchAll(IBX))tally(t[1])}
   const t=d+b+o;
   $('stats').innerHTML=t?`<b>${d}</b> done &nbsp; <b>${b}</b> problem &nbsp; <b>${o}</b> to do &nbsp; of ${t} marked`:'';
   $('fn').innerHTML=(name||'No file open')+(dirty?' <i>(unsaved)</i>':'');
@@ -210,19 +322,40 @@ function push(){hist.push(lines.join('\n'));if(hist.length>300)hist.shift();redo
 function undo(){if(view==='edit'){document.execCommand('undo');return}if(!hist.length)return;redo.push(lines.join('\n'));lines=hist.pop().split('\n');setDirty(true);render()}
 function redoIt(){if(view==='edit'){document.execCommand('redo');return}if(!redo.length)return;hist.push(lines.join('\n'));lines=redo.pop().split('\n');setDirty(true);render()}
 
+/* screen layout: wrap on/off and page width (remembered; PDF export is not affected) */
+const WIDTHS=[['Normal','1000px'],['Wide','1500px'],['Full','none']];
+let wrapOn=true,wIdx=0;
+try{wrapOn=localStorage.getItem('jne.wrap')!=='0';wIdx=Math.min(WIDTHS.length-1,Math.max(0,+localStorage.getItem('jne.w')||0))}catch(e){}
+function applyLayout(){
+  document.body.classList.toggle('nowrap',!wrapOn);
+  document.documentElement.style.setProperty('--w',WIDTHS[wIdx][1]);
+  $('bWrap').textContent='Wrap: '+(wrapOn?'on':'off');$('bWidth').textContent='Width: '+WIDTHS[wIdx][0];
+  $('bWidth').disabled=!wrapOn;
+  try{localStorage.setItem('jne.wrap',wrapOn?'1':'0');localStorage.setItem('jne.w',wIdx)}catch(e){}
+}
+$('bWrap').onclick=()=>{wrapOn=!wrapOn;applyLayout()};
+$('bWidth').onclick=()=>{wIdx=(wIdx+1)%WIDTHS.length;applyLayout()};
+applyLayout();
+
 /* view */
 function setView(v){view=v;$('vMark').classList.toggle('on',v==='mark');$('vEdit').classList.toggle('on',v==='edit');render()}
 
 /* line interactions */
 $('doc').addEventListener('click',e=>{
-  const row=e.target.closest('.row');if(!row)return;
+  const row=e.target.closest('.row,.trow');if(!row)return;
   const i=+row.dataset.i;
+  const ib=e.target.closest('.ib');
+  if(ib){
+    push();const s=split(lines[i]);let n=0;
+    lines[i]=s.pre+s.body.replace(IBX,(m,c)=>n++===+ib.dataset.k?'['+({' ':'x',x:'!','!':' '})[c]+']':m);
+    cur=i;setDirty(true);render();return;
+  }
   if(e.target.closest('.box')){
     push();const {st,body}=split(lines[i]);
     const nx=NEXT[st===null?'none':st];
     lines[i]=(nx?`- [${nx}] `:'')+body;cur=i;setDirty(true);render();return;
   }
-  if(cur!==i){const p=document.querySelector('.row.cur');if(p)p.classList.remove('cur');row.classList.add('cur');cur=i}
+  if(cur!==i){const p=document.querySelector('.cur');if(p)p.classList.remove('cur');row.classList.add('cur');cur=i}
 });
 
 /* pictures */
@@ -294,10 +427,11 @@ function wrap(f){
     lines=ta.value.split('\n');setDirty(true);return;
   }
   if(cur<0)return toast('Click a line first');
-  push();
   const {pre,body}=split(lines[cur]);
   const s=getSelection().toString();
   let a,b,idx=s&&!s.includes('\n')?body.indexOf(s):-1;
+  if(idx<0&&isBox(lines[cur]))return toast('Table row: select the text in a cell first');
+  push();
   if(idx<0){a=body.match(/^\s*(?:>\s?)?/)[0].length;b=body.length}else{a=idx;b=idx+s.length}
   const seg=body.slice(a,b);
   const out=(seg.length>=o.length+c.length&&seg.startsWith(o)&&seg.endsWith(c))?seg.slice(o.length,seg.length-c.length):o+seg+c;
@@ -321,7 +455,37 @@ document.querySelectorAll('#tools [data-f]').forEach(b=>{
   b.onmousedown=e=>e.preventDefault();
   b.onclick=()=>b.dataset.f==='clear'?clearFmt():wrap(b.dataset.f);
 });
-for(const id of ['bNote','bNew','bDel','bUndo','bRedo'])$(id).onmousedown=e=>e.preventDefault();
+for(const id of ['bNote','bBox','bNew','bDel','bUndo','bRedo'])$(id).onmousedown=e=>e.preventDefault();
+/* Add box: inserts "[ ]" at the caret. Up to 3 spaces after it are replaced, so columns of an ASCII table keep their alignment. */
+const stripTok=t=>t.replace(/\*\*|~~|<\/?u>|\{(?:red|green|blue|orange|=yellow|=green|=pink|\/|\/=)\}/g,'');
+const spaces=(t,p)=>{let k=0;while(k<3&&t[p+k]===' ')k++;return k};
+$('bBox').onclick=()=>{
+  if(!loaded)return toast('Open a note first');
+  if(view==='edit'){
+    const ta=$('ed');if(!ta)return;const a=ta.selectionStart;
+    ta.focus();ta.setRangeText('[ ]',a,a+spaces(ta.value,a),'end');
+    lines=ta.value.split('\n');setDirty(true);return;
+  }
+  const sel=getSelection(),n=sel&&sel.rangeCount?sel.anchorNode:null;
+  const el=n&&(n.nodeType===1?n:n.parentElement);
+  const row=el&&el.closest?el.closest('#doc .row,#doc .trow'):null;
+  const txt=row&&row.querySelector('.txt');
+  const append=i=>{push();const s=split(lines[i]);lines[i]=s.pre+s.body.replace(/\s+$/,'')+' [ ]';cur=i;setDirty(true);render()};
+  if(row&&row.classList.contains('trow'))return toast('Markdown table: type [ ] in Edit view, or use the box at the start of the row');
+  if(!row||!txt||!txt.contains(n)){
+    if(cur<0)return toast('Click where you want the box first');
+    return append(cur);
+  }
+  const i=+row.dataset.i,s=split(lines[i]),body=s.body;
+  if(IMG.test(body))return toast('Not on a picture line');
+  const shown=/^\s*>/.test(body)?body.replace(/^\s*>\s?/,''):body,lead=body.length-shown.length;
+  const r=document.createRange();r.selectNodeContents(txt);r.setEnd(n,sel.anchorOffset);
+  const P=shown===''?0:r.toString().length;
+  let k=0;while(k<shown.length&&stripTok(shown.slice(0,k)).length<P)k++;
+  const p=lead+k;
+  push();lines[i]=s.pre+body.slice(0,p)+'[ ]'+body.slice(p+spaces(body,p));
+  cur=i;setDirty(true);render();
+};
 $('bNote').onclick=()=>{
   if(view!=='mark'||cur<0)return toast('Mark view: click a line first');
   const t=prompt('Note for this line:');if(!t)return;
@@ -348,7 +512,7 @@ function load(text,fname,h){
   name=fname;handle=h;hist=[];redo=[];cur=-1;loaded=true;dirty=false;render();
 }
 async function openFile(){
-  if(dirty&&!confirm('Discard unsaved changes?'))return;
+  if(!await guard())return;
   if(window.showOpenFilePicker){
     try{
       const [h]=await showOpenFilePicker({id:'jobfolder',types:TYPES});
@@ -358,7 +522,7 @@ async function openFile(){
 }
 $('fi').onchange=async e=>{const f=e.target.files[0];if(f){load(await f.text(),f.name,null);toast('Opened. This browser will download on save.')}e.target.value=''};
 async function save(as){
-  if(!loaded)return;
+  if(!loaded)return false;
   let out=lines.join(eol);
   const used=Object.keys(imgs).filter(k=>lines.some(l=>l.includes(']['+k+']')));
   if(used.length)out=out.replace(/\s+$/,'')+eol+eol+used.map(k=>`[${k}]: ${imgs[k]}`).join(eol)+eol;
@@ -367,14 +531,88 @@ async function save(as){
     try{
       if(!handle||as)handle=await showSaveFilePicker({id:'jobfolder',suggestedName:name||'job-notes.txt',types:TYPES});
       const w=await handle.createWritable();await w.write(out);await w.close();
-      name=handle.name;dirty=false;stats();toast('Saved '+name+mb);
-    }catch(e){if(e.name!=='AbortError')toast('Save failed: '+e.message)}
+      name=handle.name;dirty=false;stats();toast('Saved '+name+mb);return true;
+    }catch(e){if(e.name!=='AbortError')toast('Save failed: '+e.message);return false}
   }else{
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
-    a.download=name||'job-notes.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);dirty=false;stats();
+    a.download=name||'job-notes.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);dirty=false;stats();return true;
   }
 }
 $('bOpen').onclick=openFile;$('bSave').onclick=()=>save(false);$('bSaveAs').onclick=()=>save(true);
+
+/* unsaved-changes guard: Save / Don't save / Cancel. Resolves true when it is safe to replace the current note. */
+async function guard(){
+  if(!dirty)return true;
+  const d=$('dGuard');if(d.open)return false;
+  $('gMsg').textContent='Save changes to '+(name||'this note')+'?';
+  const r=await new Promise(res=>{d.returnValue='';d.onclose=()=>res(d.returnValue||'cancel');d.showModal()});
+  if(r==='no')return true;
+  if(r==='yes')return save(false);
+  return false;
+}
+
+/* new note. Edit TEMPLATES freely: slug is used in the file name, body is the text under the header. */
+const T_SIGN=['SIGN-OFF','Tested by: ____________________   Date: ____________','Witnessed:  ____________________   Date: ____________'];
+const TEMPLATES={
+  pre:{label:'Pre-energization check sheet',title:'PRE-ENERGIZATION CHECK SHEET',slug:'PreEnergization',body:[
+    '1. DOCUMENTS AND SETTINGS','- [ ] Settings file matches the approved revision','- [ ] Settings read back from the device and compared to the basis','- [ ] Drawings on site are at the current revision','',
+    '2. TEST EQUIPMENT','- [ ] Test set ID and calibration due date recorded','',
+    '3. CHECKS','- [ ] T1  <step>','> <expected result / note>','HOLD POINT - <what must be witnessed before continuing>','',
+    '4. RESTORE AND RELEASE','- [ ] Test links and temporary jumpers removed','- [ ] Settings restored, targets and alarms cleared','- [ ] Panel closed, labels in place','',...T_SIGN,'']},
+  comm:{label:'Commissioning test sheet',title:'COMMISSIONING TEST SHEET',slug:'Commissioning',body:[
+    '1. PRE-CHECKS','- [ ] Nameplate and wiring verified against drawings','- [ ] Insulation / continuity checks complete','',
+    '2. FUNCTIONAL TESTS','- [ ] T1  <test>','> <expected result / measured value>','- [ ] T2  <test>','',
+    '3. HANDOVER','- [ ] As-found / as-left records attached','- [ ] Punch list items closed or listed','',...T_SIGN,'']},
+  maint:{label:'Maintenance / inspection',title:'MAINTENANCE / INSPECTION RECORD',slug:'Maintenance',body:[
+    '1. AS-FOUND','- [ ] <condition / reading>','',
+    '2. WORK DONE','- [ ] <task>','',
+    '3. AS-LEFT','- [ ] <condition / reading>','- [ ] Equipment returned to service','',...T_SIGN,'']},
+  issue:{label:'Issue / fault log',title:'ISSUE LOG',slug:'IssueLog',body:[
+    'SYMPTOM','<what was observed>','',
+    'FINDINGS','- [!] <problem found>','',
+    'ACTIONS','- [ ] <action>','',
+    'FOLLOW-UP','- [ ] <who / by when>','']},
+  blank:{label:'Blank note',slug:'Notes',body:null}
+};
+const todayStr=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+function noteFile(t,f){
+  if(!t.body)return 'job-notes.txt';
+  const tag=(f.tag.split(/[\s(]/)[0]||'JOB').replace(/[^\w.-]+/g,'-');
+  return tag+'_'+t.slug+'_'+f.date.replace(/-/g,'')+'.txt';
+}
+function buildNote(f){
+  const t=TEMPLATES[f.type];if(!t.body)return '';
+  const R='='.repeat(78),title=[f.sub,t.title].filter(Boolean).join(' - ');
+  const h=[R,'',f.tag||'<equipment / tag>','',(title.length<57?title.padEnd(59):title+'   ')+'Rev '+f.rev+'  '+f.date,''];
+  if(f.basis)h.push('Basis: '+f.basis,'');
+  if(f.scope)h.push('Scope: '+f.scope,'');
+  h.push(R,'');
+  return h.concat(t.body).join('\n');
+}
+function newForm(){
+  return {type:$('nType').value,tag:$('nTag').value.trim(),sub:$('nSub').value.trim().toUpperCase(),rev:$('nRev').value.trim()||'1',
+    date:$('nDate').value||todayStr(),basis:$('nBasis').value.trim(),scope:$('nScope').value.trim()};
+}
+function syncNew(){
+  const f=newForm(),t=TEMPLATES[f.type];
+  $('nFields').style.display=t.body?'':'none';
+  $('nFile').textContent='File name: '+noteFile(t,f);
+}
+$('nType').innerHTML=Object.keys(TEMPLATES).map(k=>`<option value="${k}">${TEMPLATES[k].label}</option>`).join('');
+$('fNew').addEventListener('input',syncNew);
+$('nCancel').onclick=()=>$('dNew').close();
+$('fNew').onsubmit=e=>{
+  e.preventDefault();
+  const f=newForm(),t=TEMPLATES[f.type];
+  $('dNew').close();
+  load(buildNote(f),noteFile(t,f),null);
+  eol='\r\n';setDirty(true);setView(t.body?'mark':'edit');
+};
+async function newNote(){
+  if($('dNew').open||!await guard())return;
+  $('nDate').value=todayStr();syncNew();$('dNew').showModal();$('nTag').focus();
+}
+$('bNewNote').onclick=newNote;
 
 /* export PDF (browser print dialog -> Save as PDF) */
 function exportPdf(){
@@ -396,10 +634,12 @@ addEventListener('drop',async e=>{
   const dropped=[...e.dataTransfer.files];
   if(dropped.length&&dropped.every(f=>f.type.startsWith('image/'))){addImages(dropped);return}
   const it=e.dataTransfer.items&&e.dataTransfer.items[0];if(!it)return;
-  if(dirty&&!confirm('Discard unsaved changes?'))return;
+  /* grab file and handle now: drag data is only valid during the event, the Save/Don't save dialog is async */
+  const f0=it.getAsFile(),hp=it.getAsFileSystemHandle?it.getAsFileSystemHandle():null;
+  if(!await guard())return;
   try{
-    let h=null;if(it.getAsFileSystemHandle){h=await it.getAsFileSystemHandle();if(h&&h.kind!=='file')h=null}
-    const f=h?await h.getFile():it.getAsFile();load(await f.text(),f.name,h);
+    let h=hp?await hp:null;if(h&&h.kind!=='file')h=null;
+    const f=h?await h.getFile():f0;load(await f.text(),f.name,h);
   }catch(err){toast('Could not open: '+err.message)}
 });
 
@@ -409,6 +649,7 @@ addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(k==='s'){e.preventDefault();save(e.shiftKey)}
   else if(k==='o'){e.preventDefault();openFile()}
+  else if(k==='n'){e.preventDefault();e.shiftKey?window.open(location.href,'_blank'):newNote()}
   else if(k==='p'){e.preventDefault();exportPdf()}
   else if(view==='mark'&&k==='z'){e.preventDefault();undo()}
   else if(view==='mark'&&k==='y'){e.preventDefault();redoIt()}
